@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lektionsplanung</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f3f4f6;color:#222;font:16px Arial,sans-serif}header{background:#fff;padding:18px;border-bottom:1px solid #ddd}header h1{font-size:23px;margin:0}header p{margin:6px 0 0;color:#555}main{max-width:850px;margin:16px auto;padding:0 12px 30px}.card,.phase{background:#fff;border:1px solid #ddd;border-radius:12px;padding:15px;margin-bottom:14px}.card h2,.phase h2{font-size:19px;margin:0 0 12px}.field{margin-bottom:13px}label{display:block;font-weight:bold;font-size:14px;margin:0 0 5px}input,textarea{width:100%;font:inherit;padding:10px;border:1px solid #aaa;border-radius:7px;background:#fff}textarea{min-height:68px;resize:vertical}.twocol{display:grid;grid-template-columns:1fr 1fr;gap:12px}.phasehead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}.phasehead h2{margin:0}.task{border-top:1px solid #ddd;padding:12px 0}.task:first-child{border-top:0}.tasktitle{display:flex;justify-content:space-between;align-items:center;font-weight:bold;margin-bottom:9px}.taskgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.taskgrid .time{grid-column:1/-1}.taskgrid textarea{min-height:58px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}button{border:0;border-radius:8px;background:#1558b0;color:#fff;font-weight:bold;font-size:15px;padding:11px 13px;cursor:pointer}.secondary{background:#e9edf2;color:#222}.danger{background:#fff0f0;color:#a00;padding:7px 10px}.total{background:#fff;border:2px solid #1558b0;border-radius:12px;padding:16px;font-size:18px;font-weight:bold}.hint{font-size:13px;color:#555;line-height:1.4}#printArea{display:none}
+@media(max-width:600px){.twocol,.taskgrid{grid-template-columns:1fr}.taskgrid .time{grid-column:auto}.phasehead{align-items:flex-start;flex-direction:column}}
+@page{size:A4 portrait;margin:12mm}
+@media print{body{background:#fff}header,main{display:none!important}#printArea{display:block!important}.ptitle{font-size:10pt;font-weight:bold;margin-bottom:3mm}.meta{margin-bottom:3mm;font-size:9pt}.topgrid{display:grid;grid-template-columns:1fr 1fr;gap:5mm;margin-bottom:4mm}.infobox{border:1px solid #888;padding:5px;min-height:20mm;font-size:8.5pt;overflow-wrap:anywhere}.infobox h3{font-size:9pt;margin:0 0 2px}.goalbox{margin-bottom:2mm}.infotext{white-space:pre-wrap}.flowtitle{font-size:10pt;font-weight:bold;margin:3mm 0 1.5mm}table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:8pt}td,th{border:1px solid #999;padding:4px;vertical-align:top;overflow-wrap:anywhere}th{font-size:8.5pt;text-align:center}.phase-name{font-weight:bold;text-align:center;vertical-align:middle;white-space:nowrap;writing-mode:vertical-rl;transform:rotate(180deg);padding:3px 1px}.taskcell{white-space:pre-wrap;min-height:12mm}.timecell{text-align:center;white-space:nowrap}.clock{font-size:10pt}.totalprint{font-weight:bold;margin-top:3mm;text-align:right}.small{font-size:8pt}}
+</style></head><body>
+<header><h1>Lektionsplanung</h1><p>Einfach ausfüllen, Übungen hinzufügen und als PDF ausgeben.</p></header>
+<main>
+<section class="card"><h2>1. Angaben zur Lektion</h2>
+<div class="field"><label for="thema">Thema</label><input id="thema" placeholder="Thema der Lektion"></div>
+<div class="field"><label for="grobziel">Grobziel</label><textarea id="grobziel" placeholder="Übergeordnetes Ziel der Lektion"></textarea></div>
+<div class="field"><label for="feinziel">Feinziel</label><textarea id="feinziel" placeholder="Was sollen die Teilnehmenden konkret können oder erreichen?"></textarea></div>
+<div class="field"><label for="lernkontrolle">Lernkontrolle</label><textarea id="lernkontrolle" placeholder="Wie wird überprüft, ob das Ziel erreicht wurde?"></textarea></div>
+<div class="field"><label>Voraussetzung</label><div class="twocol"><div><label for="normativ">Normativ</label><textarea id="normativ" placeholder="Vorgaben, Regeln, Rahmenbedingungen"></textarea></div><div><label for="situativ">Situativ</label><textarea id="situativ" placeholder="Ort, Wetter, Platzverhältnisse usw."></textarea></div><div><label for="personell">Personell</label><textarea id="personell" placeholder="Gruppe, Vorkenntnisse, Fähigkeiten"></textarea></div></div></div>
+<div class="field"><label for="material">Material</label><textarea id="material" placeholder="Benötigtes Material für die gesamte Lektion"></textarea></div>
+
+</section>
+<section class="card"><h2>2. Lektionsablauf</h2><p class="hint">In jedem Hauptbereich kannst du beliebig viele Übungen oder Aufgaben hinzufügen. Die Zeit in Minuten wird automatisch zusammengerechnet. Gib dafür beispielsweise „10“ oder „10 min“ ein.</p><div id="phases"></div></section>
+<div class="total">Gesamtdauer: <span id="total">0</span> Minuten <span id="totalClock" class="hint"></span></div>
+<div class="actions"><button type="button" onclick="makePDF()">PDF erstellen / drucken</button><button type="button" class="secondary" onclick="saveData()">Zwischenspeichern</button><button type="button" class="secondary" onclick="loadData()">Eingaben laden</button><button type="button" class="secondary" onclick="clearData()">Formular leeren</button></div>
+<p class="hint">Die Eingaben werden nur gespeichert, wenn du „Zwischenspeichern“ wählst. Keine vertraulichen Dienst- oder Personendaten eingeben.</p>
+</main><section id="printArea"></section>
+<script>
+const names=[['einstieg','Einstieg'],['hauptteil','Hauptteil'],['ausklang','Ausklang']];
+const root=document.getElementById('phases');
+const fields=['thema','grobziel','feinziel','lernkontrolle','normativ','situativ','personell','material'];
+function esc(v){return String(v||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function addPhase(k,n){let s=document.createElement('section');s.className='phase';s.dataset.phase=k;s.innerHTML=`<div class="phasehead"><h2>${n}</h2><button type="button" class="secondary" onclick="addTask('${k}')">＋ Übung/Aufgabe hinzufügen</button></div><div class="tasks"></div>`;root.appendChild(s);addTask(k)}
+function addTask(k,d={}){let host=document.querySelector(`[data-phase="${k}"] .tasks`),s=document.createElement('div');s.className='task';s.innerHTML=`<div class="tasktitle"><span>Übung/Aufgabe ${host.children.length+1}</span><button type="button" class="danger" onclick="this.closest('.task').remove();numberTasks('${k}');updateTotal()">Entfernen</button></div><div class="taskgrid"><div class="time"><label>Zeit (Minuten)</label><input data-k="time" inputmode="decimal" placeholder="z. B. 10" value="${esc(d.time)}" oninput="updateTotal()"></div><div><label>Lernverfahren</label><textarea data-k="verfahren" placeholder="Wie wird gelernt? Methode, Organisation">${esc(d.verfahren)}</textarea></div><div><label>Lerninhalt</label><textarea data-k="inhalt" placeholder="Was wird geübt oder gelernt?">${esc(d.inhalt)}</textarea></div><div><label>Notizen / Material</label><textarea data-k="notizen" placeholder="Hinweise, Hilfsmittel, Material">${esc(d.notizen)}</textarea></div></div>`;host.appendChild(s)}
+function numberTasks(k){document.querySelectorAll(`[data-phase="${k}"] .tasktitle span`).forEach((e,i)=>e.textContent=`Übung/Aufgabe ${i+1}`)}
+function tasks(k){return [...document.querySelectorAll(`[data-phase="${k}"] .task`)].map(t=>Object.fromEntries([...t.querySelectorAll('[data-k]')].map(i=>[i.dataset.k,i.value])))}
+function minutes(v){let m=String(v||'').match(/[\d.,]+/);return m?Math.max(0,Number(m[0].replace(',','.'))||0):0}
+function updateTotal(){let sum=names.reduce((a,[k])=>a+tasks(k).reduce((b,t)=>b+minutes(t.time),0),0);document.getElementById('total').textContent=Number.isInteger(sum)?sum:sum.toFixed(1);let h=Math.floor(sum/60),m=Math.round(sum%60);document.getElementById('totalClock').textContent=sum>=60?`(${h} Std. ${m} Min.)`:''}
+names.forEach(([k,n])=>addPhase(k,n));updateTotal();
+function val(id){return document.getElementById(id).value}
+function makePDF(){
+ const text=v=>esc(v||'').replace(/\\n/g,'<br>');
+ const rows=names.map(([k,n])=>{
+   const ts=tasks(k);
+   if(!ts.length) return `<tr><td class="phase-name">${n}</td><td></td><td></td><td></td><td class="timecell"></td></tr>`;
+   return ts.map((t,i)=>`<tr>${i===0?`<td class="phase-name" rowspan="${ts.length}">${n}</td>`:''}<td class="taskcell">${text(t.verfahren)}</td><td class="taskcell">${text(t.inhalt)}</td><td class="taskcell">${text(t.notizen)}</td><td class="timecell">${text(t.time)}′</td></tr>`).join('');
+ }).join('');
+ document.getElementById('printArea').innerHTML=`
+ <div class="ptitle">Lektionspräparation</div>
+ <div class="meta"><strong>Thema:</strong> ${text(val('thema'))}</div>
+ <div class="topgrid">
+  <div>
+   <div class="infobox goalbox"><h3>Grobziel</h3><div class="infotext">${text(val('grobziel'))}</div></div>
+   <div class="infobox goalbox"><h3>Feinziel</h3><div class="infotext">${text(val('feinziel'))}</div></div>
+   <div class="infobox"><h3>Lernkontrolle</h3><div class="infotext">${text(val('lernkontrolle'))}</div></div>
+  </div>
+  <div>
+   <div class="infobox goalbox"><h3>Voraussetzungen</h3><strong><em>Normativ</em></strong><br>${text(val('normativ'))}<br><br><strong><em>Situativ</em></strong><br>${text(val('situativ'))}<br><br><strong><em>Personell</em></strong><br>${text(val('personell'))}</div>
+   <div class="infobox"><h3>Material</h3><div class="infotext">${text(val('material'))}</div></div>
+  </div>
+ </div>
+ <div class="flowtitle">Lektionsablauf</div>
+ <table><colgroup><col style="width:4%"><col style="width:21%"><col style="width:55%"><col style="width:16%"><col style="width:4%"></colgroup>
+ <thead><tr><th></th><th>Lernverfahren</th><th>Lerninhalt</th><th>Material</th><th><span class="clock">◷</span></th></tr></thead>
+ <tbody>${rows}</tbody></table>
+ <div class="totalprint">Gesamtdauer: ${document.getElementById('total').textContent} Minuten</div>`;
+ window.print()
+}
+function data(){return {form:Object.fromEntries(fields.map(k=>[k,val(k)])),phases:Object.fromEntries(names.map(([k])=>[k,tasks(k)]))}}
+function saveData(){try{localStorage.setItem('lektionsplanung',JSON.stringify(data()));alert('Eingaben auf diesem Gerät gespeichert.')}catch(e){alert('Speichern ist nicht verfügbar.')}}function loadData(){try{let d=JSON.parse(localStorage.getItem('lektionsplanung')||'null');if(!d){alert('Keine gespeicherten Eingaben gefunden.');return}fields.forEach(k=>document.getElementById(k).value=d.form?.[k]||'');names.forEach(([k])=>{let h=document.querySelector(`[data-phase="${k}"] .tasks`);h.innerHTML='';(d.phases?.[k]||[{}]).forEach(t=>addTask(k,t));numberTasks(k)});updateTotal()}catch(e){alert('Laden nicht möglich.')}}function clearData(){if(confirm('Alle Eingaben leeren?')){fields.forEach(k=>document.getElementById(k).value='');names.forEach(([k])=>{let h=document.querySelector(`[data-phase="${k}"] .tasks`);h.innerHTML='';addTask(k)});updateTotal()}}
+</script></body></html>
